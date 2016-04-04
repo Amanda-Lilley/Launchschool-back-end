@@ -1,30 +1,106 @@
+require 'pry'
+
+INITIAL_MARKER = ' '
+PLAYER_MARKER = 'x'
+COMPUTER_MARKER = 'o'
+WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
+                [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
+                [[3, 5, 7], [1, 5, 9]]
+
 def prompt(message)
   puts "=> #{message}"
 end
+# rubocop:disable Metrics/AbcSize
 
-remaining_choices = (1..9).to_a
-players_boxes = []
-computers_boxes =[]
+def display_board(brd)
+  system 'clear'
+  puts "You're a #{PLAYER_MARKER}. Computer is #{COMPUTER_MARKER}."
+  puts ""
+  puts "     |     |"
+  puts " #{brd[1]}   |  #{brd[2]}  |  #{brd[3]}"
+  puts "     |     |"
+  puts "------------------"
+  puts "     |     |"
+  puts "  #{brd[4]}  |  #{brd[5]}  |  #{brd[6]}"
+  puts "     |     |"
+  puts "------------------"
+  puts "     |     |"
+  puts "  #{brd[7]}  |  #{brd[8]}  |  #{brd[9]}"
+  puts "     |     |"
+  puts ""
+end
+# rubocop:enable Metrics/AbcSize
 
-prompt "Hello, welcome to Tic Tac Toe!"
-prompt "Row one represnet squares 1 2, and 3 from left to right"
-prompt "Row two represnet squares 3 4, and 5 from left to right"
-prompt "Row three represnet squares 6 7, and 8 from left to right"
-
-def players_turn
-prompt "Please choose a square from the remaining choices #{remaining_choices}."
-player_choice = gets.chomp
+def initialize_board
+  new_board = {}
+  (1..9).each { |num| new_board[num] = INITIAL_MARKER }
+  new_board
 end
 
-
-
-def update_boxes_and_choices(chosen_box)
-  case chosen_box
-  when
+def empty_squares(brd) # inspecting the board
+  brd.keys.select { |num| brd[num] == INITIAL_MARKER }
 end
 
-=begin
-board = {row_one: %w[1 2 3]
-         row_two: %w[4 5 6]
-         row_three: %w[7 8 9]}
-=end
+def player_places_piece!(brd) # modifying the board
+  square = ''
+  loop do
+    prompt "Choose a square (#{empty_squares(brd).join(', ')}):"
+    square = gets.chomp.to_i
+    break if empty_squares(brd).include?(square)
+    prompt "Sorry, that's not a valid choice."
+  end
+  brd[square] = PLAYER_MARKER
+end
+
+def computer_places_piece!(brd)
+  square = empty_squares(brd).sample
+  brd[square] = COMPUTER_MARKER
+end
+
+def board_full?(brd)
+  empty_squares(brd).empty?
+end
+
+def someone_won?(brd)
+  !!detect_winner(brd) # !! forcibly turn value into boolean
+end                    # If return string player will return true, nil returns false
+
+def detect_winner(brd)
+  WINNING_LINES.each do |line|
+    if brd.values_at(line[0], line[1], line[2]).count(PLAYER_MARKER) == 3
+      return 'Player'
+    elsif brd.values_at(line[0], line[1], line[2]).count(COMPUTER_MARKER) == 3
+      return 'computer'
+    end
+  end
+  nil
+end
+
+loop do
+  board = initialize_board
+
+  loop do
+    display_board(board)
+
+    player_places_piece!(board)
+    break if someone_won?(board) || board_full?(board)
+
+    computer_places_piece!(board)
+    display_board(board)
+    break if someone_won?(board) || board_full?(board)
+  end
+
+  display_board(board)
+
+  if someone_won?(board)
+    prompt "#{detect_winner(board)} won!"
+  else
+    prompt "It's a tie!"
+  end
+
+  prompt "Play again? (y or n)"
+  answer = gets.chomp
+  break unless answer.downcase.start_with?('y')
+end
+
+prompt "Thanks for playing Tic Tac Toe. Goodbye!"
