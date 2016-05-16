@@ -13,5 +13,5 @@ def is_palindrome?(str)
 
 end
 
-word = ('racecar')
+word = ('Hello')
 p is_palindrome?(word)
